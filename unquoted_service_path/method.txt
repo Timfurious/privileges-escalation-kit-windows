@@ -1,0 +1,3 @@
+method :
+use this command for enum potential services : wmic service get name,pathname,displayname,startmode
+and when you see a service with space on the path take the reverse shell at the path like explained in the README.txt
