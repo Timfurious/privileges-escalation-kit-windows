@@ -43,7 +43,7 @@ Write-Host "[+] Creating dummy executable at $ServiceExePath"
 # ----------------------------
 
 Write-Host "[+] Granting full control of folder to user '$User'"
-icacls $ServiceFolder /grant "$User:(OI)(CI)F" /T
+icacls $ServiceFolder /grant "$User (OI)(CI)F" /T
 
 # ----------------------------
 # Step 3: Create the service
