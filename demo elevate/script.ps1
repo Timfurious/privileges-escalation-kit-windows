@@ -4,51 +4,51 @@
 
 .DESCRIPTION
     This PowerShell script sets up a vulnerable Windows service by:
-    - Creating a directory and a dummy service executable file
-    - Assigning full control of the service binary path to a low-privileged user
-    - Creating a service that runs as LocalSystem
-    - Granting the user permission to modify the service configuration
-
-    This is intended for lab environments ONLY to demonstrate privilege escalation techniques.
+    - Creating a directory and dummy executable
+    - Giving a low-privileged user full control of the service path
+    - Creating a service running as SYSTEM
+    - Applying insecure service permissions
 
 .NOTES
-    Author: Your Name
+    Author: Timfurious
     Date: 2025-05-25
-    Use only in isolated environments!
+    For lab use only.
 #>
 
 # ----------------------------
 # Configuration
 # ----------------------------
 
-# Username of the low-privileged user (local account, no domain prefix)
+# Replace with your local user (no domain)
 $User = "test"
 
 # Service details
 $ServiceName = "VulnService"
 $ServiceDisplayName = "Vulnerable Service"
 $ServiceFolder = "C:\VulnService"
-$ServiceExePath = Join-Path $ServiceFolder "service.exe"
+$ServiceExePath = "$ServiceFolder\service.exe"
 
 # ----------------------------
-# Step 1: Create Service Folder
+# Step 1: Create the service folder
 # ----------------------------
-Write-Host "[+] Creating vulnerable service directory at $ServiceFolder"
+
+Write-Host "[+] Creating service folder at $ServiceFolder"
 New-Item -Path $ServiceFolder -ItemType Directory -Force | Out-Null
 
-# Create a dummy executable file
-Write-Host "[+] Creating dummy service executable"
-"Fake binary content" | Out-File -FilePath $ServiceExePath -Encoding ASCII -Force
+Write-Host "[+] Creating dummy executable at $ServiceExePath"
+"echo Hello from SYSTEM!" | Out-File -FilePath $ServiceExePath -Encoding ASCII -Force
 
 # ----------------------------
-# Step 2: Set Folder Permissions
+# Step 2: Set permissions on folder
 # ----------------------------
-Write-Host "[+] Granting full control of $ServiceFolder to user '$User'"
+
+Write-Host "[+] Granting full control of folder to user '$User'"
 icacls $ServiceFolder /grant "$User:(OI)(CI)F" /T
 
 # ----------------------------
-# Step 3: Create the Service
+# Step 3: Create the service
 # ----------------------------
+
 Write-Host "[+] Creating Windows service '$ServiceName'"
 New-Service -Name $ServiceName `
             -BinaryPathName "`"$ServiceExePath`"" `
@@ -56,19 +56,18 @@ New-Service -Name $ServiceName `
             -StartupType Manual
 
 # ----------------------------
-# Step 4: Make the Service Permissions Insecure
+# Step 4: Apply insecure permissions
 # ----------------------------
 
-# This SDDL grants the "Authenticated Users" group (AU) full control over the service config
-# You can replace AU with the specific user SID if needed
+# This SDDL gives "Authenticated Users" full control over the service config
 $InsecureSDDL = "D:(A;;CCLCSWRPWPDTLOCRRC;;;AU)"
 
-Write-Host "[+] Applying insecure service permissions (SDDL)"
+Write-Host "[+] Applying insecure service permissions"
 Start-Process -FilePath "sc.exe" -ArgumentList "sdset $ServiceName $InsecureSDDL" -Wait -NoNewWindow
 
 # ----------------------------
 # Done
 # ----------------------------
-Write-Host "`n[+] Vulnerable service '$ServiceName' created successfully."
-Write-Host "[!] User '$User' now has full control over the service binary and configuration."
-Write-Host "[!] This setup is vulnerable to privilege escalation. Use in lab environments only!"
+
+Write-Host "`n[+] Done!"
+Write-Host "[!] '$User' now has full control over the service and its binary."
